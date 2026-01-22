@@ -20,28 +20,30 @@ export class TicketsService {
   // 🔹 Récupérer tous les tickets
   findAll() {
     return this.ticketsRepository.find({
-      relations: ['user', 'priority'],
+      relations: ['user', 'priority', 'assignedTo', 'comments'],
     });
   }
 
   // 🔹 Créer un ticket
-  async create(data: Partial<Ticket>, user: any) { // ← AJOUTEZ le paramètre user
-    // Associez l'utilisateur au ticket
-    const ticketData = {
-      ...data,
-      user: { id: user.sub || user.id }, // ← Utilisez user.sub ou user.id selon votre payload JWT
-    };
+  async create(data: Partial<Ticket>, user: any) {
+  const ticketData = {
+    title: data.title,
+    description: data.description,
+    status: data.status || TicketStatus.OPEN,
+    user: { id: user.sub || user.id },
+    priority: data.priority,
+    ...(data.assignedTo && { assignedTo: data.assignedTo }),
+  };
 
-    const ticket = await this.ticketsRepository.save(ticketData);
+  const ticket = await this.ticketsRepository.save(ticketData);
 
-    // 🔔 Notification après création
-    await this.notificationsService.create(
-      user.sub || user.id, // ← Utilisez directement l'ID de l'utilisateur connecté
-      'Votre ticket a été créé avec succès',
-    );
+  await this.notificationsService.create(
+    user.sub || user.id,
+    'Votre ticket a été créé avec succès',
+  );
 
-    return ticket;
-  }
+  return ticket;
+}
 
   // 🔹 Mettre à jour le status d'un ticket
   async updateStatus(

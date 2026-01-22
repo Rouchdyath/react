@@ -5,16 +5,29 @@ import { Comment } from './comments.entity';
 
 @Injectable()
 export class CommentsService {
-    constructor(
-        @InjectRepository(Comment)
-        private repo:Repository<Comment>
+  constructor(
+    @InjectRepository(Comment)
+    private repo: Repository<Comment>
+  ) {}
 
-    ){}
-    finAll(){
-        return this.repo.find();
-    }
-    create(data :Partial<Comment>){
-        const  comments = this.repo.create(data);
-        return this.repo.save(comments);
-    }
+  findAll() {
+    return this.repo.find({ relations: ['ticket', 'user'] });
+  }
+
+  findByTicket(ticketId: number) {
+    return this.repo.find({ 
+      where: { ticket: { id: ticketId } },
+      relations: ['user'],
+      order: { created_at: 'ASC' }
+    });
+  }
+
+  create(data: Partial<Comment>) {
+    const comment = this.repo.create(data);
+    return this.repo.save(comment);
+  }
+
+  async delete(id: number) {
+    return this.repo.delete(id);
+  }
 }

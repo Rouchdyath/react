@@ -1,6 +1,8 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
+import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -8,10 +10,39 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async login(email: string, password: string) {
-    const user = await this.usersService.findByEmail(email);
+  async register(name: string, email: string, password: string, role: 'client' | 'agent' | 'admin' = 'client') {
+    // Hash le mot de passe avant de le sauvegarder
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const user = await this.usersService.create({
+      name,
+      email,
+      password: hashedPassword,
+      role,
+    });
 
-    if (!user || user.password !== password) {
+    // Ne pas retourner le mot de passe
+    const { password: _, ...result } = user;
+    return result;
+  }
+
+  async login(email: string, password: string) {
+    console.log('🔍 Tentative de login avec:', email);
+    
+    const user = await this.usersService.findByEmail(email);
+    console.log('👤 Utilisateur trouvé:', user ? 'Oui' : 'Non');
+
+    if (!user) {
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    }
+
+    console.log('🔑 Password fourni:', password);
+    console.log('🔒 Hash en base:', user.password);
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log('✅ Mot de passe valide:', isPasswordValid);
+    
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
@@ -19,10 +50,21 @@ export class AuthService {
       sub: user.id,
       role: user.role,
       email: user.email,
+      name: user.name,
     };
 
     return {
       access_token: this.jwtService.sign(payload),
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+      },
     };
+  }
+
+  async validateUser(userId: number) {
+    return this.usersService.findOne(userId);
   }
 }

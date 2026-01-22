@@ -5,7 +5,7 @@ import { Notification } from './notification.entity';
 
 @Injectable()
 export class NotificationService {
-    constructor(
+  constructor(
     @InjectRepository(Notification)
     private repo: Repository<Notification>,
   ) {}
@@ -14,6 +14,7 @@ export class NotificationService {
     return this.repo.save({
       message,
       user: { id: userId },
+      isRead: false,
     });
   }
 
@@ -24,12 +25,29 @@ export class NotificationService {
     });
   }
 
-  markAsRead(id: number) {
-    return this.repo.update(id, { isRead: true });
+  findUnreadNotifications(userId: number) {
+    return this.repo.find({
+      where: { 
+        user: { id: userId },
+        isRead: false 
+      },
+      order: { createdAt: 'DESC' },
+    });
+  }
+
+  async markAsRead(id: number) {
+    await this.repo.update(id, { isRead: true });
+    return this.repo.findOne({ where: { id } });
+  }
+
+  async markAllAsRead(userId: number) {
+    return this.repo.update(
+      { user: { id: userId }, isRead: false },
+      { isRead: true }
+    );
+  }
+
+  async delete(id: number) {
+    return this.repo.delete(id);
   }
 }
-
-
-
-
-

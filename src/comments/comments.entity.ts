@@ -1,23 +1,23 @@
-import { TimeoutInfo } from "rxjs";
-import { TimeInterval } from "rxjs/internal/operators/timeInterval";
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDateColumn } from 'typeorm';
+import { Ticket } from '../tickets/ticket.entity'; // Ajuste le chemin selon ta structure
+import { User } from '../users/users.entity'; // Ajuste le chemin selon ta structure
 
-@Entity()
-    export class Comment {
-        @PrimaryGeneratedColumn()
-        id: number;
+@Entity('comments')
+export class Comment {
+  @PrimaryGeneratedColumn()
+  id: number;
 
-        @Column()
-        ticket_id: number;
+  @ManyToOne(() => Ticket, ticket => ticket.comments)
+  @JoinColumn({ name: 'ticket_id' })
+  ticket: Ticket;
 
-        @Column()
-        user_id: number;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user: User;
 
-        @Column()
-        message: string;
+  @Column('text')
+  message: string;
 
-        @Column()
-        created_at: Date;
-
-    }
-    
+  @CreateDateColumn()
+  created_at: Date;
+}
