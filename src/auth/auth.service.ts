@@ -11,13 +11,11 @@ export class AuthService {
   ) {}
 
   async register(name: string, email: string, password: string, role: 'client' | 'agent' | 'admin' = 'client') {
-    // Hash le mot de passe avant de le sauvegarder
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
+    // Ne pas hasher ici, le UsersService.create() le fait déjà
     const user = await this.usersService.create({
       name,
       email,
-      password: hashedPassword,
+      password, // Passer le mot de passe en clair, UsersService le hashera
       role,
     });
 

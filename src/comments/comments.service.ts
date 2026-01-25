@@ -18,7 +18,7 @@ export class CommentsService {
     return this.repo.find({ 
       where: { ticket: { id: ticketId } },
       relations: ['user'],
-      order: { created_at: 'ASC' }
+      order: { createdAt: 'ASC' }
     });
   }
 
@@ -27,7 +27,40 @@ export class CommentsService {
     return this.repo.save(comment);
   }
 
-  async delete(id: number) {
+  async update(id: number, content: string, user: any) {
+    const comment = await this.repo.findOne({ 
+      where: { id },
+      relations: ['user']
+    });
+    
+    if (!comment) {
+      throw new Error('Commentaire introuvable');
+    }
+
+    // Seul l'auteur ou un admin peut modifier
+    if (comment.user.id !== (user.sub || user.id) && user.role !== 'admin') {
+      throw new Error('Vous ne pouvez modifier que vos propres commentaires');
+    }
+
+    comment.message = content;
+    return this.repo.save(comment);
+  }
+
+  async delete(id: number, user: any) {
+    const comment = await this.repo.findOne({ 
+      where: { id },
+      relations: ['user']
+    });
+    
+    if (!comment) {
+      throw new Error('Commentaire introuvable');
+    }
+
+    // Seul l'auteur ou un admin peut supprimer
+    if (comment.user.id !== (user.sub || user.id) && user.role !== 'admin') {
+      throw new Error('Vous ne pouvez supprimer que vos propres commentaires');
+    }
+
     return this.repo.delete(id);
   }
 }

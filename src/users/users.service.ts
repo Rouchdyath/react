@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './users.entity';
@@ -42,5 +42,40 @@ export class UsersService {
 
   async delete(id: number) {
     return this.usersRepository.delete(id);
+  }
+
+  // 🔹 Méthodes pour l'admin dashboard
+  async updateUser(id: number, data: any) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+
+    // Valider le rôle si fourni
+    if (data.role && !['client', 'agent', 'admin'].includes(data.role)) {
+      throw new BadRequestException('Rôle invalide. Rôles valides: client, agent, admin');
+    }
+
+    // Mettre à jour l'utilisateur
+    await this.usersRepository.update(id, data);
+    return this.findOne(id);
+  }
+
+  async deleteUser(id: number) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable');
+    }
+
+    // Empêcher la suppression du dernier admin
+    if (user.role === 'admin') {
+      const adminCount = await this.usersRepository.count({ where: { role: 'admin' } });
+      if (adminCount <= 1) {
+        throw new BadRequestException('Impossible de supprimer le dernier administrateur');
+      }
+    }
+
+    await this.usersRepository.delete(id);
+    return { message: 'Utilisateur supprimé avec succès' };
   }
 }

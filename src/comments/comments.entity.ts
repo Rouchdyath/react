@@ -18,6 +18,9 @@ export class Comment {
   @Column('text')
   message: string;
 
+  @Column({ default: false })
+  isInternal: boolean;
+
   @CreateDateColumn()
-  created_at: Date;
+  createdAt: Date;
 }

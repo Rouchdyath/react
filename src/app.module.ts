@@ -7,7 +7,8 @@ import { TicketsModule } from './tickets/tickets.module';
 import { TicketAssignmentsModule } from './ticket_assignments/ticket_assignments.module';
 import { AuthModule } from './auth/auth.module';
 import { NotificationModule } from './notification/notification.module';
-import { CommentsModule } from './comments/comments.module'; // ← AJOUTE CETTE LIGNE
+import { CommentsModule } from './comments/comments.module';
+import { StatsModule } from './stats/stats.module';
 
 @Module({
   imports: [
@@ -18,9 +19,9 @@ import { CommentsModule } from './comments/comments.module'; // ← AJOUTE CETTE
       type: 'postgres',
       host: 'localhost',
       port: 5432,
-      username: 'postgres',
-      password: '0000',
-      database: 'ticket_db',
+      username: 'hopitaluser',
+      password: '1234',
+      database: 'ticket1_db',
       autoLoadEntities: true,
       synchronize: true,
     }),
@@ -31,7 +32,8 @@ import { CommentsModule } from './comments/comments.module'; // ← AJOUTE CETTE
     TicketAssignmentsModule,
     AuthModule,
     NotificationModule,
-    CommentsModule, // ← CHANGE commentModule en CommentsModule (avec majuscule)
+    CommentsModule,
+    StatsModule,
   ],
 })
 export class AppModule {}

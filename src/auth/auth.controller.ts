@@ -11,6 +11,11 @@ export class AuthController {
     return this.authService.login(body.email, body.password);
   }
 
+  @Post('register')
+  async register(@Body() body: { name: string; email: string; password: string; role?: string }) {
+    return this.authService.register(body.name, body.email, body.password, body.role as any);
+  }
+
   @Get('me')
   @UseGuards(JwtAuthGuard)
   getMe(@Req() req) {
